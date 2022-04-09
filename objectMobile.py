@@ -1,6 +1,12 @@
+import pygame
 from objectGame import ObjectGame
 
+
 class ObjectMobile(ObjectGame):
+    def __init__(self):
+        super().__init__()
+        self.direction = pygame.math.Vector2(0, 0)
+
     def move(self, movement):
 
         if movement == 'right':
