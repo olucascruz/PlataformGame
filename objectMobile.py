@@ -3,9 +3,10 @@ from objectGame import ObjectGame
 
 
 class ObjectMobile(ObjectGame):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, img, speed):
+        super().__init__(img)
         self.direction = pygame.math.Vector2(0, 0)
+        self.speed = speed
 
     def move(self, movement):
 

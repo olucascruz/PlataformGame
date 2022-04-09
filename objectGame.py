@@ -4,6 +4,12 @@ import pygame
 
 
 class ObjectGame(pygame.sprite.Sprite):
+    def __init__(self, img):
+        super().__init__()
+        self.image = pygame.transform.scale(img, (config.quadrant_size, config.quadrant_size))
+        self.rect = self.image.get_rect()
+        self.width = self.image.get_width()
+        self.height = self.image.get_height()
 
     def collide(self, object_game):
     
@@ -14,12 +20,3 @@ class ObjectGame(pygame.sprite.Sprite):
 
     def draw(self, surface):
         surface.blit(self.image, (self.rect.x, self.rect.y))
-
-        if self.rect.bottom > config.SCREEN_HEIGHT:
-            self.rect.bottom = config.SCREEN_HEIGHT
-        if self.rect.left < 0:
-            self.rect.left = 0
-        if self.rect.right > config.SCREEN_WIDTH:
-            self.rect.right = config.SCREEN_WIDTH
-
-        

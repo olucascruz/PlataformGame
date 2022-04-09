@@ -12,8 +12,7 @@ class Game:
         self.game_screen = pygame.display.set_mode((config.SCREEN_WIDTH, config.SCREEN_HEIGHT))
         self.clock = pygame.time.Clock()
         self.run = True
-        self.player = Player(175, 300, config.quadrant_size, config.quadrant_size)
-        self.enemy = Enemy(300, 500)
+        self.player = Player(375, 0)
         self.level = Level(self.game_screen, config.map_data)
 
     def input(self):
@@ -36,31 +35,51 @@ class Game:
                     self.player.move("jump")
 
     def process(self):
-        self.level.setup_level(config.map_data)
+        if self.player.rect.bottom > config.SCREEN_HEIGHT:
+            self.player.rect.x = config.SCREEN_WIDTH/2
+            self.player.rect.y = 0
 
-        for object in self.level.object_list:
-            if self.player.collide(object):
-                if object.rect.y-5 > self.player.rect.y-self.player.height/2 > object.rect.y - object.rect.height:
-                    if self.player.rect.x < object.rect.x - object.rect.width/2 and self.player.direction.x > 0:
-                        self.player.rect.x = object.rect.x - object.rect.width / 2 - self.player.width / 2
+        if self.player.rect.left < 0:
+            self.player.rect.left = 0
+        if self.player.rect.right > config.SCREEN_WIDTH:
+            self.player.rect.right = config.SCREEN_WIDTH
+
+        for enemy in self.level.enemy_list:
+            for sprite in self.level.object_list:
+                if enemy.collide(sprite):
+                    if enemy.rect.y < sprite.rect.y:
+                        if (enemy.rect.bottom - sprite.rect.top) < 10 and enemy.direction.y > 0:
+                            enemy.direction.y = 0
+                            enemy.rect.y = sprite.rect.y - sprite.rect.height / 2 - enemy.height / 2
+
+                    elif enemy.rect.y > sprite.rect.y:
+                        if (enemy.rect.top - sprite.rect.bottom) < 10 and enemy.direction.y < 0:
+                            enemy.direction.y = 0
+                            enemy.rect.y = sprite.rect.y + sprite.rect.height / 2 + enemy.height / 2 + 1
+
+        for sprite in self.level.object_list:
+            if self.player.collide(sprite):
+                # check if player not above sprite or below sprite
+                if sprite.rect.y - 5 > self.player.rect.y - self.player.height / 2 > sprite.rect.y - sprite.rect.height:
+                    if self.player.rect.x < sprite.rect.x - sprite.rect.width / 2 and self.player.direction.x > 0:
+                        self.player.rect.x = sprite.rect.x - sprite.rect.width / 2 - self.player.width / 2
                         self.player.direction.x = 0
-                    elif self.player.rect.x > object.rect.x - object.rect.width/2 and self.player.direction.x < 0:
-                        self.player.rect.x = object.rect.x + object.rect.width / 2 + self.player.width / 2
+                    elif self.player.rect.x > sprite.rect.x - sprite.rect.width / 2 and self.player.direction.x < 0:
+                        self.player.rect.x = sprite.rect.x + sprite.rect.width / 2 + self.player.width / 2
                         self.player.direction.x = 0
 
-                if self.player.rect.y < object.rect.y:
-                    if (self.player.rect.bottom - object.rect.top) < 10 and self.player.direction.y > 0:
+                if self.player.rect.y < sprite.rect.y:
+                    if (self.player.rect.bottom - sprite.rect.top) < 10 and self.player.direction.y > 0:
                         self.player.direction.y = 0
-                        self.player.rect.y = object.rect.y - object.rect.height/2 - self.player.height/2
+                        self.player.rect.y = sprite.rect.y - sprite.rect.height / 2 - self.player.height / 2
 
-                elif self.player.rect.y > object.rect.y:
-                    if (self.player.rect.top - object.rect.bottom) < 10 and self.player.direction.y < 0:
+                elif self.player.rect.y > sprite.rect.y:
+                    if (self.player.rect.top - sprite.rect.bottom) < 10 and self.player.direction.y < 0:
                         self.player.direction.y = 0
-                        self.player.rect.y = object.rect.y + object.rect.height/2 + self.player.height/2 + 1
+                        self.player.rect.y = sprite.rect.y + sprite.rect.height / 2 + self.player.height / 2 + 1
 
     def draw(self):
-        self.player.draw(self.game_screen)
-
+        self.game_screen.blit(config.image_background_transformed, (0, 0))
         for line in range(0, 16):
             vertical_line = pygame.draw.line(self.game_screen, config.WHITE,
                                              (0, line * config.quadrant_size),
@@ -71,18 +90,19 @@ class Game:
                                                (line * config.quadrant_size, config.SCREEN_HEIGHT))
 
         self.level.draw()
+        self.player.draw(self.game_screen)
 
     def game_loop(self):
         while self.run:
-            self.clock.tick(60)
             self.input()
 
             self.game_screen.fill("BLACK")
-
+            self.process()
             self.draw()
             self.player.update()
-            self.process()
             pygame.display.update()
+            pygame.display.flip()
+            self.clock.tick(60)
 
 
 game = Game()
