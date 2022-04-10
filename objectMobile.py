@@ -19,7 +19,7 @@ class ObjectMobile(ObjectGame):
             self.direction.x = 0
 
         if movement == "jump":
-            self.direction.y = -21
+            self.direction.y = -15
     
     def apply_gravity(self):
         gravity = 0.8

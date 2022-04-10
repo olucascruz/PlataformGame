@@ -5,8 +5,7 @@ import config
 
 
 class Level:
-    def __init__(self, surface, map_data):
-        self.surface = surface
+    def __init__(self, map_data):
         self.object_list = pygame.sprite.Group()
         self.enemy_list = pygame.sprite.Group()
         self.setup_level(map_data)
@@ -29,8 +28,6 @@ class Level:
                 col_cont += 1
             row_cont += 1
 
-    def draw(self):
-        self.object_list.draw(self.surface)
-        self.enemy_list.draw(self.surface)
-        self.enemy_list.update()
+
+
 

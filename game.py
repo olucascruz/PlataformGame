@@ -2,7 +2,6 @@ import pygame
 import config
 from level import Level
 from player import Player
-from enemy import Enemy
 
 
 class Game:
@@ -13,7 +12,8 @@ class Game:
         self.clock = pygame.time.Clock()
         self.run = True
         self.player = Player(375, 0)
-        self.level = Level(self.game_screen, config.map_data)
+        self.player_group = pygame.sprite.GroupSingle(self.player)
+        self.level = Level(config.map_data)
 
     def input(self):
         keys = pygame.key.get_pressed()
@@ -36,7 +36,7 @@ class Game:
 
     def process(self):
         if self.player.rect.bottom > config.SCREEN_HEIGHT:
-            self.player.rect.x = config.SCREEN_WIDTH/2
+            self.player.rect.x = config.SCREEN_WIDTH / 2
             self.player.rect.y = 0
 
         if self.player.rect.left < 0:
@@ -45,6 +45,8 @@ class Game:
             self.player.rect.right = config.SCREEN_WIDTH
 
         for enemy in self.level.enemy_list:
+            if enemy.collide(self.player):
+                self.player.kill()
             for sprite in self.level.object_list:
                 if enemy.collide(sprite):
                     if enemy.rect.y < sprite.rect.y:
@@ -60,12 +62,12 @@ class Game:
         for sprite in self.level.object_list:
             if self.player.collide(sprite):
                 # check if player not above sprite or below sprite
-                if sprite.rect.y - 5 > self.player.rect.y - self.player.height / 2 > sprite.rect.y - sprite.rect.height:
-                    if self.player.rect.x < sprite.rect.x - sprite.rect.width / 2 and self.player.direction.x > 0:
-                        self.player.rect.x = sprite.rect.x - sprite.rect.width / 2 - self.player.width / 2
+                if sprite.rect.y - 10 > self.player.rect.y - self.player.height/2 > sprite.rect.y - sprite.rect.height:
+                    if self.player.rect.x < sprite.rect.x - sprite.rect.width/2 and self.player.direction.x > 0:
+                        self.player.rect.x = sprite.rect.x - sprite.rect.width/2 - self.player.width / 2
                         self.player.direction.x = 0
-                    elif self.player.rect.x > sprite.rect.x - sprite.rect.width / 2 and self.player.direction.x < 0:
-                        self.player.rect.x = sprite.rect.x + sprite.rect.width / 2 + self.player.width / 2
+                    elif self.player.rect.x > sprite.rect.x - sprite.rect.width/2 and self.player.direction.x < 0:
+                        self.player.rect.x = sprite.rect.x + sprite.rect.width/2 + self.player.width / 2
                         self.player.direction.x = 0
 
                 if self.player.rect.y < sprite.rect.y:
@@ -78,19 +80,25 @@ class Game:
                         self.player.direction.y = 0
                         self.player.rect.y = sprite.rect.y + sprite.rect.height / 2 + self.player.height / 2 + 1
 
+        for enemy in self.level.enemy_list:
+            enemy.move("left")
+
     def draw(self):
         self.game_screen.blit(config.image_background_transformed, (0, 0))
         for line in range(0, 16):
-            vertical_line = pygame.draw.line(self.game_screen, config.WHITE,
-                                             (0, line * config.quadrant_size),
-                                             (config.SCREEN_WIDTH, line * config.quadrant_size))
+            # draw vertical lines
+            pygame.draw.line(self.game_screen, config.WHITE,
+                             (0, line * config.quadrant_size),
+                             (config.SCREEN_WIDTH, line * config.quadrant_size))
 
-            horizontal_line = pygame.draw.line(self.game_screen, config.WHITE,
-                                               (line * config.quadrant_size, 0),
-                                               (line * config.quadrant_size, config.SCREEN_HEIGHT))
+            # draw horizontal lines
+            pygame.draw.line(self.game_screen, config.WHITE,
+                             (line * config.quadrant_size, 0),
+                             (line * config.quadrant_size, config.SCREEN_HEIGHT))
 
-        self.level.draw()
-        self.player.draw(self.game_screen)
+        self.level.object_list.draw(self.game_screen)
+        self.level.enemy_list.draw(self.game_screen)
+        self.player_group.draw(self.game_screen)
 
     def game_loop(self):
         while self.run:
@@ -99,6 +107,7 @@ class Game:
             self.game_screen.fill("BLACK")
             self.process()
             self.draw()
+            self.level.enemy_list.update()
             self.player.update()
             pygame.display.update()
             pygame.display.flip()
