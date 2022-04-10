@@ -9,6 +9,9 @@ class Player(ObjectMobile):
         super().__init__(config.image_player, self.speed)
         self.rect.x = x
         self.rect.y = y
+        self.img_right = []
+        self.index = 0
+        self.status = 'stopped'
 
     def attack(self):
         pass

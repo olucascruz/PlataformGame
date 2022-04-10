@@ -108,7 +108,7 @@ class Game:
             self.process()
             self.draw()
             self.level.enemy_list.update()
-            self.player.update()
+            #self.player.update()
             pygame.display.update()
             pygame.display.flip()
             self.clock.tick(60)
