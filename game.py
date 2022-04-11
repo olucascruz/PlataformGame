@@ -20,6 +20,7 @@ class Game:
 
         if keys[pygame.K_a]:
             self.player.move("left")
+
         elif keys[pygame.K_d]:
             self.player.move("right")
         else:
@@ -33,6 +34,15 @@ class Game:
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
                     self.player.move("jump")
+                if event.key == pygame.K_f:
+                    if not self.player.is_attack:
+                        self.player.attack(True)
+                        print(self.player.is_attack)
+
+            elif event.type == pygame.KEYUP:
+                if event.key == pygame.K_f:
+                    if self.player.is_attack:
+                        self.player.attack(False)
 
     def process(self):
         if self.player.rect.bottom > config.SCREEN_HEIGHT:
@@ -41,12 +51,31 @@ class Game:
 
         if self.player.rect.left < 0:
             self.player.rect.left = 0
+
         if self.player.rect.right > config.SCREEN_WIDTH:
             self.player.rect.right = config.SCREEN_WIDTH
 
         for enemy in self.level.enemy_list:
+            if enemy.rect.bottom > config.SCREEN_HEIGHT:
+                enemy.rect.x = config.SCREEN_WIDTH / 2
+                enemy.rect.y = 0
+
+            if enemy.rect.left < 0:
+                enemy.rect.left = 0
+                enemy.reverse()
+
+            if enemy.rect.right > config.SCREEN_WIDTH:
+                enemy.rect.right = config.SCREEN_WIDTH
+                enemy.reverse()
+
+            if self.player.is_attack:
+                if enemy.rect.left - self.player.rect.right < 20 and\
+                        enemy.rect.top == self.player.rect.top:
+                    enemy.kill()
+
             if enemy.collide(self.player):
                 self.player.kill()
+
             for sprite in self.level.object_list:
                 if enemy.collide(sprite):
                     if enemy.rect.y < sprite.rect.y:
@@ -80,9 +109,6 @@ class Game:
                         self.player.direction.y = 0
                         self.player.rect.y = sprite.rect.y + sprite.rect.height / 2 + self.player.height / 2 + 1
 
-        for enemy in self.level.enemy_list:
-            enemy.move("left")
-
     def draw(self):
         self.game_screen.blit(config.image_background_transformed, (0, 0))
         for line in range(0, 16):
@@ -108,7 +134,7 @@ class Game:
             self.process()
             self.draw()
             self.level.enemy_list.update()
-            #self.player.update()
+            self.player.update()
             pygame.display.update()
             pygame.display.flip()
             self.clock.tick(60)
