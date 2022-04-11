@@ -12,7 +12,6 @@ class ObjectGame(pygame.sprite.Sprite):
         self.height = self.image.get_height()
 
     def collide(self, object_game):
-    
         collision_x = (math.fabs(self.rect.x - object_game.rect.x) * 2) < (self.width + object_game.width)
         collision_y = ((math.fabs(self.rect.y - object_game.rect.y) * 2) < (self.height + object_game.height))
 

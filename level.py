@@ -5,14 +5,15 @@ import config
 
 
 class Level:
-    def __init__(self, map_data):
+    def __init__(self):
         self.object_list = pygame.sprite.Group()
         self.enemy_list = pygame.sprite.Group()
-        self.setup_level(map_data)
+        self.map_data = config.map_data
+        self.setup_level()
 
-    def setup_level(self, data):
+    def setup_level(self):
         row_cont = 0
-        for row in data:
+        for row in self.map_data:
             col_cont = 0
             for quadrant in row:
                 if quadrant == 1:
@@ -28,6 +29,15 @@ class Level:
                 col_cont += 1
             row_cont += 1
 
+    def add_enemy(self):
+        if len(self.enemy_list) < 2:
+            self.object_list.empty()
+            self.map_data = config.map_data2
+            self.map_data[0][0] = 2
+            self.map_data[0][1] = 2
+            self.map_data[0][10] = 2
+            self.map_data[0][11] = 2
+            self.setup_level()
 
-
-
+    def update(self):
+        self.add_enemy()

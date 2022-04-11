@@ -17,6 +17,7 @@ class Player(ObjectMobile):
         self.index = 0
         self.speed_attack = 0.25
         self.update_status()
+        self.life = 3
 
     def attack(self, check):
         self.is_attack = check
@@ -49,5 +50,3 @@ class Player(ObjectMobile):
             else:
                 img_attack = pygame.transform.scale(img_attack, (config.quadrant_size, config.quadrant_size))
             self.img_attack.append(img_attack)
-
-
