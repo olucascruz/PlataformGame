@@ -7,7 +7,7 @@ from objectMobile import ObjectMobile
 class Enemy(ObjectMobile):
 
     def __init__(self):
-        self.speed = 2
+        self.speed = 3
         self.img_right = []
         self.img = config.image_soldier
         super().__init__(self.img, self.img_right)
@@ -16,7 +16,7 @@ class Enemy(ObjectMobile):
         self.speed_attack = 0.25
         self.is_attack = False
         self.animation()
-        self.behavior()
+
 
     def attack(self, check):
         self.is_attack = check
@@ -52,8 +52,8 @@ class Enemy(ObjectMobile):
         self.current_direction = 'left'
 
     def behavior(self):
-        self.attack(True)
-        if self.rect.x < config.SCREEN_WIDTH / 2:
+        if self.rect.x < config.SCREEN_WIDTH // 2:
             self.move('right')
-        if self.rect.x > config.SCREEN_WIDTH / 2:
-            self.reverse()
+        if self.rect.x > config.SCREEN_WIDTH // 2:
+            self.move('left')
+

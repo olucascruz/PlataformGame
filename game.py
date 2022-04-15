@@ -2,6 +2,8 @@ import pygame
 import config
 from level import Level
 from player import Player
+from enemy import Enemy
+from block import Block
 
 
 class Game:
@@ -54,13 +56,10 @@ class Game:
 
     def process(self):
         # win
-        if len(self.level.enemy_list) < 1:
-            self.main_menu = True
 
         # reset game
         if not self.player_group:
             self.level.object_list.empty()
-            self.level.enemy_list.empty()
             self.level.map_data = config.map_data
             self.level.setup_level()
             self.player.rect.x = config.SCREEN_WIDTH // 2 - 75
@@ -82,88 +81,100 @@ class Game:
         if self.player.rect.right > config.SCREEN_WIDTH:
             self.player.rect.right = config.SCREEN_WIDTH
 
-        for enemy in self.level.enemy_list:
-            if enemy.rect.bottom > config.SCREEN_HEIGHT:
-                enemy.rect.x = config.SCREEN_WIDTH / 2
-                enemy.rect.y = 0
+        # logic player dead
+        if self.player.life < 1:
+            self.player.kill()
 
-            if enemy.rect.left < 0:
-                enemy.rect.left = 0
-                enemy.reverse()
+        if not self.main_menu:
+            self.level.update()
+            self.player.update()
 
-            if enemy.rect.right > config.SCREEN_WIDTH:
-                enemy.rect.right = config.SCREEN_WIDTH
-                enemy.reverse()
-
-            # logic player attack
-            if self.player.is_attack:
-                if self.player.current_direction == "right":
-                    if -75 < enemy.rect.left - self.player.rect.right < 40 and \
-                            enemy.rect.top == self.player.rect.top:
-                        enemy.kill()
-                else:
-                    if -75 < enemy.rect.right - self.player.rect.left < 40 and \
-                            enemy.rect.top == self.player.rect.top:
-                        enemy.kill()
-
-            # effect collision with enemy
-            if enemy.collide(self.player) and enemy.rect.top - self.player.rect.top < 10:
-                self.player.life -= 1
-                self.player.move("jump")
-                if self.player.current_direction == 'left':
-                    self.player.current_direction = 'right'
-                    self.player.rect.x += 40
-                if self.player.current_direction == 'right':
-                    self.player.rect.x -= 40
-
-            # collision enemy with boxes
             for sprite in self.level.object_list:
-                if enemy.collide(sprite):
-                    if -75 < enemy.rect.left - sprite.rect.right < 40 and \
-                            enemy.rect.top == sprite.rect.top:
-                        enemy.reverse()
-                    if -75 < enemy.rect.right - sprite.rect.left < 40 and \
-                            enemy.rect.top == sprite.rect.top:
-                        enemy.reverse()
+                if type(sprite) == Block:
+                    block = sprite
 
-                    if enemy.rect.y < sprite.rect.y:
-                        if (enemy.rect.bottom - sprite.rect.top) < 10 and enemy.direction.y > 0:
-                            enemy.direction.y = 0
-                            enemy.rect.y = sprite.rect.y - sprite.rect.height / 2 - enemy.height / 2
+                    # check collision
+                    if self.player.collide(block):
 
-                    elif enemy.rect.y > sprite.rect.y:
-                        if (enemy.rect.top - sprite.rect.bottom) < 10 and enemy.direction.y < 0:
-                            enemy.direction.y = 0
-                            enemy.rect.y = sprite.rect.y + sprite.rect.height / 2 + enemy.height / 2 + 1
+                        # checks if the player is neither above nor below
+                        if block.rect.top < self.player.rect.centery < block.rect.bottom:
 
-        # logic collision player with boxes
-        for sprite in self.level.object_list:
-            if self.player.collide(sprite):
-                # check if player not above sprite or below sprite
-                if sprite.rect.y - 10 > self.player.rect.y \
-                        - self.player.height / 2 > sprite.rect.y - sprite.rect.height:
+                            # checks if the player collided from the right
+                            if block.rect.centerx > self.player.rect.right >= block.rect.left - 10:
+                                self.player.rect.right = block.rect.left
+                                self.player.direction.x = 0
 
-                    if self.player.rect.x < sprite.rect.x - sprite.rect.width / 2 and self.player.direction.x > 0:
-                        self.player.rect.x = sprite.rect.x - sprite.rect.width / 2 - self.player.width / 2
-                        self.player.direction.x = 0
+                            # checks if the player collided from the left
+                            elif block.rect.centerx < self.player.rect.left <= block.rect.right + 10:
+                                self.player.rect.left = block.rect.right
+                                self.player.direction.x = 0
 
-                    elif self.player.rect.x > sprite.rect.x - sprite.rect.width / 2 and self.player.direction.x < 0:
-                        self.player.rect.x = sprite.rect.x + sprite.rect.width / 2 + self.player.width / 2
-                        self.player.direction.x = 0
+                        # checks if the player collided from above
+                        if block.rect.centery > self.player.rect.bottom >= block.rect.top and \
+                                self.player.rect.right - 10 > block.rect.left and \
+                                self.player.rect.left + 10 < block.rect.right:  # consider the smaller player
+                            self.player.rect.bottom = block.rect.top
+                            if self.player.direction.y > 0:
+                                self.player.direction.y = 0
 
-                if self.player.rect.y < sprite.rect.y:
-                    if (self.player.rect.bottom - sprite.rect.top) < 10 and self.player.direction.y > 0:
-                        self.player.direction.y = 0
-                        self.player.rect.y = sprite.rect.y - sprite.rect.height / 2 - self.player.height / 2
+                        # checks if the player collided from below
+                        if block.rect.centery < self.player.rect.top <= block.rect.bottom:
+                            self.player.rect.top = block.rect.bottom
+                            if self.player.direction.y < 0:
+                                self.player.direction.y = 0
 
-                elif self.player.rect.y > sprite.rect.y:
-                    if (self.player.rect.top - sprite.rect.bottom) < 10 and self.player.direction.y < 0:
-                        self.player.direction.y = 0
-                        self.player.rect.y = sprite.rect.y + sprite.rect.height / 2 + self.player.height / 2 + 1
+                if type(sprite) == Enemy:
+                    enemy = sprite
+                    enemy.update()
 
-                # logic player dead
-                if self.player.life < 1:
-                    self.player.kill()
+                    if self.player.collide(enemy):
+                        self.player.move('jump')
+                        self.player.life -= 1
+                        if self.player.current_direction == "right":
+                            self.player.rect.x -= 10
+                        if self.player.current_direction == "left":
+                            self.player.rect.x += 10
+
+                    # logic player attack
+                    if self.player.is_attack:
+                        if self.player.current_direction == "right":
+                            if -75 < enemy.rect.left - self.player.rect.right < 40 and \
+                                    enemy.rect.top == self.player.rect.top:
+                                enemy.kill()
+
+                        else:
+                            if -75 < enemy.rect.right - self.player.rect.left < 40 and \
+                                    enemy.rect.top == self.player.rect.top:
+                                enemy.kill()
+
+                    for sprite_2 in self.level.object_list:
+                        if type(sprite_2) == Block:
+                            block = sprite_2
+                            if enemy.collide(block):
+                                # checks if the enemy is neither above nor below
+                                if block.rect.top < enemy.rect.centery < block.rect.bottom:
+
+                                    # checks if the enemy collided from the right
+                                    if block.rect.centerx > enemy.rect.right >= block.rect.left - 10:
+                                        enemy.rect.right = block.rect.left
+                                        enemy.reverse()
+
+                                    # checks if the enemy collided from the left
+                                    elif block.rect.centerx < enemy.rect.left <= block.rect.right + 10:
+                                        enemy.rect.left = block.rect.right
+                                        enemy.reverse()
+
+                                # checks if the enemy collided from above
+                                if block.rect.centery > enemy.rect.bottom >= block.rect.top:
+                                    enemy.rect.bottom = block.rect.top
+                                    if enemy.direction.y > 0:
+                                        enemy.direction.y = 0
+
+                                # checks if the enemy crashed from below
+                                if block.rect.centery < enemy.rect.top <= block.rect.bottom:
+                                    enemy.rect.top = block.rect.bottom
+                                    if enemy.direction.y < 0:
+                                        enemy.direction.y = 0
 
     def draw(self):
         if self.main_menu:
@@ -179,7 +190,6 @@ class Game:
             heart = pygame.transform.scale(heart, (config.quadrant_size * 2, config.quadrant_size / 2))
             self.game_screen.blit(config.image_background_transformed, (0, 0))
             self.level.object_list.draw(self.game_screen)
-            self.level.enemy_list.draw(self.game_screen)
             self.player_group.draw(self.game_screen)
             if self.player_group:
                 self.game_screen.blit(heart, (config.SCREEN_WIDTH // 2 - 75, 5))
@@ -190,8 +200,6 @@ class Game:
             self.game_screen.fill("BLACK")
             self.process()
             self.draw()
-            self.level.enemy_list.update()
-            self.player.update()
             pygame.display.update()
             pygame.display.flip()
             self.clock.tick(60)

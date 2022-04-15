@@ -1,5 +1,5 @@
 import pygame
-from plataform import Block
+from block import Block
 from enemy import Enemy
 import config
 
@@ -25,12 +25,14 @@ class Level:
                     enemy = Enemy()
                     enemy.rect.x = col_cont * config.quadrant_size
                     enemy.rect.y = row_cont * config.quadrant_size
+                    enemy.behavior()
+                    self.object_list.add(enemy)
                     self.enemy_list.add(enemy)
                 col_cont += 1
             row_cont += 1
 
     def add_enemy(self):
-        if len(self.enemy_list) < 2:
+        if len(self.enemy_list) == 1:
             self.object_list.empty()
             self.map_data = config.map_data2
             self.map_data[0][0] = 2
@@ -41,3 +43,4 @@ class Level:
 
     def update(self):
         self.add_enemy()
+
